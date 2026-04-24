@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HealthHub — Patient & Provider Portal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f8f7f4;color:#1a1a1a;min-height:100vh}
+/* Topbar */
+.topbar{background:#0F6E56;padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px}
+.logo svg{width:22px;height:22px;fill:white}
+.logo-text{color:white;font-size:15px;font-weight:500;letter-spacing:-0.02em}
+.logo-sub{color:rgba(255,255,255,0.6);font-size:11px}
+.top-right{display:flex;align-items:center;gap:16px}
+.top-notif{background:rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:12px;color:white;cursor:pointer}
+.top-user{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.85)}
+.top-avatar{width:28px;height:28px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:white}
+/* Sub nav */
+.subnav{background:white;border-bottom:1px solid #e8e6e0;padding:0 24px;display:flex;gap:0;overflow-x:auto}
+.snav-item{padding:10px 16px;font-size:13px;color:#888;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s}
+.snav-item.active{color:#0F6E56;border-bottom-color:#0F6E56;font-weight:500}
+.snav-item:hover:not(.active){color:#444}
+/* Layout */
+.layout{display:grid;grid-template-columns:260px 1fr;gap:0;min-height:calc(100vh - 90px)}
+/* Left panel */
+.left-panel{background:white;border-right:1px solid #e8e6e0;padding:16px}
+.panel-title{font-size:11px;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+/* Patient card */
+.pat-card{background:#F4FBF8;border:1px solid #C0EAD9;border-radius:10px;padding:12px;margin-bottom:12px;cursor:pointer;transition:all 0.15s}
+.pat-card:hover,.pat-card.active{background:#E1F5EE;border-color:#1D9E75}
+.pat-card-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.pat-ava{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.pat-name{font-size:13px;font-weight:500;color:#1a1a1a}
+.pat-id{font-size:11px;color:#888}
+.pat-tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 6px;border-radius:4px}
+.tag-green{background:#EAF3DE;color:#3B6D11}
+.tag-amber{background:#FAEEDA;color:#854F0B}
+.tag-red{background:#FCEBEB;color:#A32D2D}
+.tag-blue{background:#E6F1FB;color:#185FA5}
+.tag-gray{background:#F1EFE8;color:#5F5E5A}
+/* Right main */
+.main-area{padding:20px;overflow:auto}
+.page{display:none}.page.active{display:block}
+/* Overview grid */
+.ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.ov-card{background:white;border:1px solid #e8e6e0;border-radius:10px;padding:12px 14px}
+.ov-label{font-size:11px;color:#888;margin-bottom:3px}
+.ov-val{font-size:20px;font-weight:500;color:#1a1a1a}
+.ov-sub{font-size:11px;margin-top:2px}
+.sub-green{color:#3B6D11}.sub-amber{color:#854F0B}.sub-red{color:#A32D2D}
+/* Cards */
+.card{background:white;border:1px solid #e8e6e0;border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:500;color:#1a1a1a}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Tables */
+.htable{width:100%;border-collapse:collapse;font-size:12px}
+.htable th{text-align:left;color:#888;font-weight:500;padding:6px 10px;border-bottom:1px solid #ece9e0;background:#fafaf8}
+.htable td{padding:8px 10px;border-bottom:1px solid #f0ede6;color:#1a1a1a;vertical-align:middle}
+.htable tr:last-child td{border-bottom:none}
+.htable tr:hover td{background:#fafaf8}
+/* Badges */
+.badge{font-size:10.5px;padding:2px 8px;border-radius:100px;font-weight:500;white-space:nowrap}
+.b-green{background:#EAF3DE;color:#3B6D11}
+.b-amber{background:#FAEEDA;color:#854F0B}
+.b-red{background:#FCEBEB;color:#A32D2D}
+.b-blue{background:#E6F1FB;color:#185FA5}
+.b-teal{background:#E1F5EE;color:#0F6E56}
+.b-gray{background:#F1EFE8;color:#5F5E5A}
+/* Btn */
+.btn{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid #d0cec8;background:white;color:#1a1a1a;cursor:pointer}
+.btn:hover{background:#f5f3ee}
+.btn-teal{background:#0F6E56;color:white;border-color:#0F6E56}
+.btn-teal:hover{background:#085041}
+/* Form */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:11px;color:#888;font-weight:500}
+.form-input{font-size:12px;padding:7px 10px;border-radius:8px;border:1px solid #d0cec8;background:white;color:#1a1a1a;outline:none}
+.form-input:focus{border-color:#0F6E56}
+/* Appointment slot */
+.slot{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e8e6e0;border-radius:8px;margin-bottom:6px;cursor:pointer}
+.slot:hover{background:#fafaf8;border-color:#0F6E56}
+.slot.booked{background:#F4FBF8;border-color:#C0EAD9}
+.slot-time{font-size:12px;font-weight:500;color:#1a1a1a;width:60px}
+.slot-doc{font-size:12px;color:#555;flex:1}
+.slot-dept{font-size:11px;color:#888}
+/* Progress */
+.prog{height:6px;border-radius:100px;background:#ece9e0;overflow:hidden;margin-top:6px}
+.prog-fill{height:100%;border-radius:100px}
+/* Timeline */
+.timeline{position:relative;padding-left:18px}
+.timeline::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:#C0EAD9}
+.tl-item{position:relative;margin-bottom:12px}
+.tl-dot{position:absolute;left:-18px;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #0F6E56;background:white}
+.tl-dot.filled{background:#0F6E56}
+.tl-date{font-size:10px;color:#888;margin-bottom:2px}
+.tl-text{font-size:12px;color:#1a1a1a}
+.tl-detail{font-size:11px;color:#888;margin-top:1px}
+/* Claims compliance */
+.compliance-bar{display:flex;height:8px;border-radius:100px;overflow:hidden;gap:1px;margin:8px 0}
+.cb-seg{height:100%;border-radius:2px}
+/* Donut small */
+.mini-stat{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0ede6}
+.mini-stat:last-child{border-bottom:none}
+.ms-label{font-size:12px;color:#555;flex:1}
+.ms-bar{flex:2;height:5px;border-radius:100px;background:#ece9e0;overflow:hidden}
+.ms-fill{height:100%;border-radius:100px}
+.ms-val{font-size:12px;font-weight:500;color:#1a1a1a;min-width:32px;text-align:right}
+/* Appt detail */
+.appt-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0ede6}
+.appt-row:last-child{border-bottom:none}
+.appt-time-box{width:48px;height:44px;border-radius:8px;background:#E1F5EE;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.appt-time{font-size:12px;font-weight:500;color:#0F6E56}
+.appt-ampm{font-size:9px;color:#0F6E56}
+/* Search */
+.search-bar{display:flex;gap:8px;margin-bottom:12px}
+.search-bar input,.search-bar select{font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid #d0cec8;background:white;color:#1a1a1a;outline:none}
+.search-bar input:focus,.search-bar select:focus{border-color:#0F6E56}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M11 6h2v2h-2zm0 10h2v2h-2z" opacity="0"/></svg>
+    <div>
+      <div class="logo-text">HealthHub</div>
+      <div class="logo-sub">Patient &amp; Provider Portal</div>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="top-notif">3 pending approvals</div>
+    <div class="top-user"><div class="top-avatar">SK</div>Dr. Sekhar K &nbsp;·&nbsp; Hyderabad</div>
+  </div>
+</div>
+
+<div class="subnav">
+  <div class="snav-item active" onclick="switchPage('overview',this)">Overview</div>
+  <div class="snav-item" onclick="switchPage('appointments',this)">Appointments</div>
+  <div class="snav-item" onclick="switchPage('emr',this)">EMR / Records</div>
+  <div class="snav-item" onclick="switchPage('insurance',this)">Insurance &amp; Claims</div>
+  <div class="snav-item" onclick="switchPage('providers',this)">Providers</div>
+  <div class="snav-item" onclick="switchPage('reports',this)">Reports</div>
+</div>
+
+<div class="layout">
+  <!-- Left panel: patient list -->
+  <div class="left-panel">
+    <div class="panel-title">Active patients</div>
+
+    <div class="pat-card active" onclick="selectPat(this)">
+      <div class="pat-card-top">
+        <div class="pat-ava" style="background:#E1F5EE;color:#0F6E56">RV</div>
+        <div><div class="pat-name">Ramesh Varma</div><div class="pat-id">P-10042 &nbsp;·&nbsp; 46 yrs</div></div>
+      </div>
+      <div class="pat-tags"><span class="tag tag-amber">Hypertension</span><span class="tag tag-blue">Follow-up</span></div>
+    </div>
+
+    <div class="pat-card" onclick="selectPat(this)">
+      <div class="pat-card-top">
+        <div class="pat-ava" style="background:#FAEEDA;color:#854F0B">LP</div>
+        <div><div class="pat-name">Lakshmi Prasad</div><div class="pat-id">P-10038 &nbsp;·&nbsp; 34 yrs</div></div>
+      </div>
+      <div class="pat-tags"><span class="tag tag-red">Post-surgery</span><span class="tag tag-amber">Review</span></div>
+    </div>
+
+    <div class="pat-card" onclick="selectPat(this)">
+      <div class="pat-card-top">
+        <div class="pat-ava" style="background:#EAF3DE;color:#3B6D11">VR</div>
+        <div><div class="pat-name">Venkat Rao</div><div class="pat-id">P-10051 &nbsp;·&nbsp; 29 yrs</div></div>
+      </div>
+      <div class="pat-tags"><span class="tag tag-green">Routine</span></div>
+    </div>
+
+    <div class="pat-card" onclick="selectPat(this)">
+      <div class="pat-card-top">
+        <div class="pat-ava" style="background:#FCEBEB;color:#A32D2D">SM</div>
+        <div><div class="pat-name">Sunita Mehta</div><div class="pat-id">P-10029 &nbsp;·&nbsp; 52 yrs</div></div>
+      </div>
+      <div class="pat-tags"><span class="tag tag-red">Diabetic</span><span class="tag tag-red">Urgent</span></div>
+    </div>
+
+    <div class="pat-card" onclick="selectPat(this)">
+      <div class="pat-card-top">
+        <div class="pat-ava" style="background:#E6F1FB;color:#185FA5">AK</div>
+        <div><div class="pat-name">Arun Kumar</div><div class="pat-id">P-10060 &nbsp;·&nbsp; 38 yrs</div></div>
+      </div>
+      <div class="pat-tags"><span class="tag tag-green">New patient</span><span class="tag tag-blue">Scheduled</span></div>
+    </div>
+
+    <div class="pat-card" onclick="selectPat(this)">
+      <div class="pat-card-top">
+        <div class="pat-ava" style="background:#EEEDFE;color:#534AB7">PS</div>
+        <div><div class="pat-name">Priya Sharma</div><div class="pat-id">P-10071 &nbsp;·&nbsp; 27 yrs</div></div>
+      </div>
+      <div class="pat-tags"><span class="tag tag-green">Routine</span><span class="tag tag-blue">Insurance</span></div>
+    </div>
+
+    <button class="btn" style="width:100%;margin-top:8px;font-size:12px" onclick="switchPage('appointments',document.querySelectorAll('.snav-item')[1])">+ Schedule new patient</button>
+  </div>
+
+  <!-- Main pages -->
+  <div class="main-area">
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="ov-grid">
+        <div class="ov-card"><div class="ov-label">Today's appointments</div><div class="ov-val">12</div><div class="ov-sub sub-amber">3 remaining</div></div>
+        <div class="ov-card"><div class="ov-label">Active patients</div><div class="ov-val">248</div><div class="ov-sub sub-green">+4 this week</div></div>
+        <div class="ov-card"><div class="ov-label">Pending claims</div><div class="ov-val">34</div><div class="ov-sub sub-amber">₹8.6L value</div></div>
+        <div class="ov-card"><div class="ov-label">Compliance score</div><div class="ov-val">94%</div><div class="ov-sub sub-green">Above target</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Today's schedule</div><span class="badge b-teal">April 24, 2026</span></div>
+          <div>
+            <div class="appt-row"><div class="appt-time-box"><div class="appt-time">09:00</div><div class="appt-ampm">AM</div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Ramesh Varma</div><div style="font-size:11px;color:#888">Hypertension follow-up · 30 min</div></div><span class="badge b-teal">In progress</span></div>
+            <div class="appt-row"><div class="appt-time-box"><div class="appt-time">10:00</div><div class="appt-ampm">AM</div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Lakshmi Prasad</div><div style="font-size:11px;color:#888">Post-surgery review · 45 min</div></div><span class="badge b-amber">Upcoming</span></div>
+            <div class="appt-row"><div class="appt-time-box"><div class="appt-time">11:30</div><div class="appt-ampm">AM</div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Sunita Mehta</div><div style="font-size:11px;color:#888">Diabetes management · 30 min</div></div><span class="badge b-red">Urgent</span></div>
+            <div class="appt-row"><div class="appt-time-box"><div class="appt-time">02:00</div><div class="appt-ampm">PM</div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Arun Kumar</div><div style="font-size:11px;color:#888">New patient consultation · 60 min</div></div><span class="badge b-blue">Scheduled</span></div>
+            <div class="appt-row"><div class="appt-time-box"><div class="appt-time">03:30</div><div class="appt-ampm">PM</div></div><div style="flex:1"><div style="font-size:13px;font-weight:500">Priya Sharma</div><div style="font-size:11px;color:#888">Annual health check · 45 min</div></div><span class="badge b-blue">Scheduled</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Dept. load — April 2026</div></div>
+            <div class="mini-stat"><div class="ms-label">General Medicine</div><div class="ms-bar"><div class="ms-fill" style="width:78%;background:#0F6E56"></div></div><div class="ms-val">78%</div></div>
+            <div class="mini-stat"><div class="ms-label">Cardiology</div><div class="ms-bar"><div class="ms-fill" style="width:62%;background:#185FA5"></div></div><div class="ms-val">62%</div></div>
+            <div class="mini-stat"><div class="ms-label">Orthopaedics</div><div class="ms-bar"><div class="ms-fill" style="width:85%;background:#BA7517"></div></div><div class="ms-val">85%</div></div>
+            <div class="mini-stat"><div class="ms-label">Oncology</div><div class="ms-bar"><div class="ms-fill" style="width:45%;background:#534AB7"></div></div><div class="ms-val">45%</div></div>
+            <div class="mini-stat"><div class="ms-label">Paediatrics</div><div class="ms-bar"><div class="ms-fill" style="width:55%;background:#1D9E75"></div></div><div class="ms-val">55%</div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Insurance compliance</div><button class="btn" onclick="switchPage('insurance',document.querySelectorAll('.snav-item')[3])">Details</button></div>
+            <div class="compliance-bar">
+              <div class="cb-seg" style="width:65%;background:#0F6E56"></div>
+              <div class="cb-seg" style="width:20%;background:#EF9F27"></div>
+              <div class="cb-seg" style="width:9%;background:#E24B4A"></div>
+              <div class="cb-seg" style="width:6%;background:#e0ddd6"></div>
+            </div>
+            <div style="display:flex;gap:12px;font-size:11px;color:#888;margin-top:6px">
+              <span style="color:#0F6E56">■ Compliant 65%</span>
+              <span style="color:#EF9F27">■ Partial 20%</span>
+              <span style="color:#E24B4A">■ Non-compliant 9%</span>
+              <span>■ Pending 6%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="page" id="page-appointments">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div><div style="font-size:15px;font-weight:500">Appointments</div><div style="font-size:12px;color:#888">Book and manage patient appointments</div></div>
+        <button class="btn btn-teal">+ New appointment</button>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Available slots — Today</div></div>
+          <div class="slot booked"><div class="slot-time">09:00 AM</div><div><div class="slot-doc">Dr. Sekhar K.</div><div class="slot-dept">General Medicine</div></div><span class="badge b-teal">Booked</span></div>
+          <div class="slot booked"><div class="slot-time">10:00 AM</div><div><div class="slot-doc">Dr. Sekhar K.</div><div class="slot-dept">General Medicine</div></div><span class="badge b-teal">Booked</span></div>
+          <div class="slot"><div class="slot-time">11:00 AM</div><div><div class="slot-doc">Dr. Sekhar K.</div><div class="slot-dept">General Medicine</div></div><span class="badge b-green">Available</span></div>
+          <div class="slot booked"><div class="slot-time">11:30 AM</div><div><div class="slot-doc">Dr. Sekhar K.</div><div class="slot-dept">General Medicine</div></div><span class="badge b-teal">Booked</span></div>
+          <div class="slot"><div class="slot-time">12:30 PM</div><div><div class="slot-doc">Dr. Sekhar K.</div><div class="slot-dept">General Medicine</div></div><span class="badge b-green">Available</span></div>
+          <div class="slot booked"><div class="slot-time">02:00 PM</div><div><div class="slot-doc">Dr. Sekhar K.</div><div class="slot-dept">General Medicine</div></div><span class="badge b-teal">Booked</span></div>
+          <div class="slot"><div class="slot-time">04:00 PM</div><div><div class="slot-doc">Dr. Sekhar K.</div><div class="slot-dept">General Medicine</div></div><span class="badge b-green">Available</span></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Book appointment</div></div>
+          <div class="form-row">
+            <div class="form-group"><div class="form-label">Patient name</div><input class="form-input" placeholder="Search patient..."/></div>
+            <div class="form-group"><div class="form-label">Patient ID</div><input class="form-input" placeholder="P-XXXXX"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><div class="form-label">Department</div>
+              <select class="form-input"><option>General Medicine</option><option>Cardiology</option><option>Orthopaedics</option><option>Oncology</option><option>Paediatrics</option></select>
+            </div>
+            <div class="form-group"><div class="form-label">Appointment type</div>
+              <select class="form-input"><option>Consultation</option><option>Follow-up</option><option>Procedure</option><option>Annual check</option><option>Emergency</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><div class="form-label">Date</div><input class="form-input" type="date" value="2026-04-24"/></div>
+            <div class="form-group"><div class="form-label">Time slot</div>
+              <select class="form-input"><option>11:00 AM</option><option>12:30 PM</option><option>04:00 PM</option></select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px"><div class="form-label">Notes</div><textarea class="form-input" rows="2" placeholder="Clinical notes or reason for visit..."></textarea></div>
+          <button class="btn btn-teal" style="width:100%">Confirm booking</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMR -->
+    <div class="page" id="page-emr">
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px">EMR — Electronic Medical Records</div>
+      <div style="font-size:12px;color:#888;margin-bottom:14px">Patient: Ramesh Varma &nbsp;·&nbsp; P-10042 &nbsp;·&nbsp; 46 yrs &nbsp;·&nbsp; Male</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Vitals (last visit)</div><span style="font-size:11px;color:#888">22 Apr 2026</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:#F4FBF8;border-radius:8px;padding:10px"><div style="font-size:10px;color:#888">Blood pressure</div><div style="font-size:16px;font-weight:500;color:#0F6E56">138/88</div><div style="font-size:10px;color:#854F0B">mmHg · Elevated</div></div>
+            <div style="background:#F4FBF8;border-radius:8px;padding:10px"><div style="font-size:10px;color:#888">Heart rate</div><div style="font-size:16px;font-weight:500;color:#0F6E56">78</div><div style="font-size:10px;color:#3B6D11">bpm · Normal</div></div>
+            <div style="background:#F4FBF8;border-radius:8px;padding:10px"><div style="font-size:10px;color:#888">SpO2</div><div style="font-size:16px;font-weight:500;color:#0F6E56">98%</div><div style="font-size:10px;color:#3B6D11">Normal</div></div>
+            <div style="background:#F4FBF8;border-radius:8px;padding:10px"><div style="font-size:10px;color:#888">Weight</div><div style="font-size:16px;font-weight:500;color:#0F6E56">74 kg</div><div style="font-size:10px;color:#888">BMI 24.2</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Active prescriptions</div><button class="btn">+ Add</button></div>
+          <table class="htable">
+            <thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Amlodipine</td><td>5mg</td><td>Once daily</td><td><span class="badge b-green">Active</span></td></tr>
+              <tr><td>Telmisartan</td><td>40mg</td><td>Once daily</td><td><span class="badge b-green">Active</span></td></tr>
+              <tr><td>Aspirin</td><td>75mg</td><td>Once daily</td><td><span class="badge b-green">Active</span></td></tr>
+              <tr><td>Metformin</td><td>500mg</td><td>Twice daily</td><td><span class="badge b-amber">Review due</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Visit history timeline</div></div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-dot filled"></div><div class="tl-date">22 Apr 2026</div><div class="tl-text">Hypertension follow-up</div><div class="tl-detail">BP 138/88 — medication adjusted. Next review in 4 weeks.</div></div>
+          <div class="tl-item"><div class="tl-dot filled"></div><div class="tl-date">10 Mar 2026</div><div class="tl-text">Routine check-up</div><div class="tl-detail">All vitals normal. Renewed prescriptions for 3 months.</div></div>
+          <div class="tl-item"><div class="tl-dot filled"></div><div class="tl-date">18 Jan 2026</div><div class="tl-text">Lab results review</div><div class="tl-detail">HbA1c 6.8 — borderline. Dietary changes recommended.</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-date">05 Nov 2025</div><div class="tl-text">Initial diagnosis — Hypertension Grade I</div><div class="tl-detail">Started Amlodipine 5mg. Lifestyle counselling provided.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSURANCE -->
+    <div class="page" id="page-insurance">
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px">Insurance &amp; Claims</div>
+      <div style="font-size:12px;color:#888;margin-bottom:14px">Claims compliance tracker and insurance status dashboard</div>
+      <div class="ov-grid">
+        <div class="ov-card"><div class="ov-label">Total claims (Apr)</div><div class="ov-val">186</div><div class="ov-sub sub-green">+14 this week</div></div>
+        <div class="ov-card"><div class="ov-label">Compliant</div><div class="ov-val">121</div><div class="ov-sub sub-green">65% rate</div></div>
+        <div class="ov-card"><div class="ov-label">Pending docs</div><div class="ov-val">37</div><div class="ov-sub sub-amber">Needs action</div></div>
+        <div class="ov-card"><div class="ov-label">Rejected</div><div class="ov-val">17</div><div class="ov-sub sub-red">9% rejection</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Claims compliance tracker</div>
+          <div style="display:flex;gap:6px">
+            <select style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid #d0cec8;background:white;color:#1a1a1a" id="ins-filter" onchange="filterIns()">
+              <option value="">All statuses</option>
+              <option value="Compliant">Compliant</option>
+              <option value="Pending">Pending</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Partial">Partial</option>
+            </select>
+            <button class="btn">Export</button>
+          </div>
+        </div>
+        <table class="htable">
+          <thead><tr><th>Claim ID</th><th>Patient</th><th>Insurer</th><th>Policy type</th><th>Amount</th><th>Submitted</th><th>Compliance</th><th>Status</th></tr></thead>
+          <tbody id="ins-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PROVIDERS -->
+    <div class="page" id="page-providers">
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px">Provider directory</div>
+      <div style="font-size:12px;color:#888;margin-bottom:14px">Doctors, specialists, and care team at HealthHub Hyderabad</div>
+      <div class="search-bar">
+        <input placeholder="Search by name or specialty..." style="flex:1"/>
+        <select><option>All departments</option><option>General Medicine</option><option>Cardiology</option><option>Orthopaedics</option><option>Oncology</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:38px;height:38px;border-radius:50%;background:#E1F5EE;color:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">SK</div>
+            <div><div style="font-size:13px;font-weight:500">Dr. Sekhar K.</div><div style="font-size:11px;color:#888">General Medicine</div></div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px">MBBS, MD · 8 yrs experience · Apollo Hyderabad</div>
+          <div style="display:flex;gap:4px"><span class="badge b-teal">Available</span><span class="badge b-blue">12 patients today</span></div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:38px;height:38px;border-radius:50%;background:#E6F1FB;color:#185FA5;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">PM</div>
+            <div><div style="font-size:13px;font-weight:500">Dr. Priya M.</div><div style="font-size:11px;color:#888">Cardiology</div></div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px">MBBS, DM Cardiology · 14 yrs · Yashoda</div>
+          <div style="display:flex;gap:4px"><span class="badge b-teal">Available</span><span class="badge b-blue">8 patients today</span></div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:38px;height:38px;border-radius:50%;background:#FAEEDA;color:#854F0B;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">RN</div>
+            <div><div style="font-size:13px;font-weight:500">Dr. Ravi N.</div><div style="font-size:11px;color:#888">Orthopaedics</div></div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px">MBBS, MS Ortho · 11 yrs · Care Hospital</div>
+          <div style="display:flex;gap:4px"><span class="badge b-amber">In surgery</span></div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:38px;height:38px;border-radius:50%;background:#EAF3DE;color:#3B6D11;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">SV</div>
+            <div><div style="font-size:13px;font-weight:500">Dr. Shalini V.</div><div style="font-size:11px;color:#888">Oncology</div></div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px">MBBS, DM Oncology · 16 yrs · KIMS</div>
+          <div style="display:flex;gap:4px"><span class="badge b-teal">Available</span><span class="badge b-blue">5 patients today</span></div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:38px;height:38px;border-radius:50%;background:#EEEDFE;color:#534AB7;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">AJ</div>
+            <div><div style="font-size:13px;font-weight:500">Dr. Anand J.</div><div style="font-size:11px;color:#888">Paediatrics</div></div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px">MBBS, MD Paed · 9 yrs · Niloufer</div>
+          <div style="display:flex;gap:4px"><span class="badge b-teal">Available</span><span class="badge b-blue">10 patients today</span></div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:38px;height:38px;border-radius:50%;background:#FCEBEB;color:#A32D2D;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">MG</div>
+            <div><div style="font-size:13px;font-weight:500">Dr. Meena G.</div><div style="font-size:11px;color:#888">Neurology</div></div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px">MBBS, DM Neuro · 12 yrs · Global</div>
+          <div style="display:flex;gap:4px"><span class="badge b-red">On leave</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px">Reports &amp; Analytics</div>
+      <div style="font-size:12px;color:#888;margin-bottom:14px">Hospital performance, patient outcomes, and financial analytics</div>
+      <div class="ov-grid">
+        <div class="ov-card"><div class="ov-label">Avg length of stay</div><div class="ov-val">4.2d</div><div class="ov-sub sub-green">↓ 0.3d vs last month</div></div>
+        <div class="ov-card"><div class="ov-label">Bed occupancy</div><div class="ov-val">73%</div><div class="ov-sub sub-amber">Near threshold</div></div>
+        <div class="ov-card"><div class="ov-label">Patient satisfaction</div><div class="ov-val">4.6/5</div><div class="ov-sub sub-green">+0.2 this quarter</div></div>
+        <div class="ov-card"><div class="ov-label">Revenue (Apr)</div><div class="ov-val">₹1.8Cr</div><div class="ov-sub sub-green">+11% YoY</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Patient volume by department</div></div>
+          <svg width="100%" height="130" viewBox="0 0 300 130">
+            <rect x="20" y="60" width="36" height="60" rx="3" fill="#0F6E56"/>
+            <rect x="76" y="40" width="36" height="80" rx="3" fill="#185FA5"/>
+            <rect x="132" y="20" width="36" height="100" rx="3" fill="#BA7517"/>
+            <rect x="188" y="50" width="36" height="70" rx="3" fill="#534AB7"/>
+            <rect x="244" y="70" width="36" height="50" rx="3" fill="#1D9E75"/>
+            <text x="38" y="128" font-size="9" fill="#888" text-anchor="middle">Gen Med</text>
+            <text x="94" y="128" font-size="9" fill="#888" text-anchor="middle">Cardio</text>
+            <text x="150" y="128" font-size="9" fill="#888" text-anchor="middle">Ortho</text>
+            <text x="206" y="128" font-size="9" fill="#888" text-anchor="middle">Onco</text>
+            <text x="262" y="128" font-size="9" fill="#888" text-anchor="middle">Paed</text>
+          </svg>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Revenue by service type</div></div>
+          <div class="mini-stat"><div class="ms-label">OPD consultations</div><div class="ms-bar"><div class="ms-fill" style="width:45%;background:#0F6E56"></div></div><div class="ms-val">45%</div></div>
+          <div class="mini-stat"><div class="ms-label">Inpatient / IPD</div><div class="ms-bar"><div class="ms-fill" style="width:32%;background:#185FA5"></div></div><div class="ms-val">32%</div></div>
+          <div class="mini-stat"><div class="ms-label">Surgeries</div><div class="ms-bar"><div class="ms-fill" style="width:14%;background:#BA7517"></div></div><div class="ms-val">14%</div></div>
+          <div class="mini-stat"><div class="ms-label">Diagnostics</div><div class="ms-bar"><div class="ms-fill" style="width:9%;background:#534AB7"></div></div><div class="ms-val">9%</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const insData=[
+  {id:'HC-2026-0441',patient:'Ramesh V.',insurer:'Star Health',policy:'Family Floater',amount:'₹84,500',date:'22 Apr',compliance:'Compliant',status:'Approved'},
+  {id:'HC-2026-0440',patient:'Lakshmi P.',insurer:'HDFC ERGO',policy:'Individual',amount:'₹2,10,000',date:'21 Apr',compliance:'Partial',status:'Pending'},
+  {id:'HC-2026-0439',patient:'Sunita M.',insurer:'New India',policy:'Senior Citizen',amount:'₹45,200',date:'20 Apr',compliance:'Non-compliant',status:'Rejected'},
+  {id:'HC-2026-0438',patient:'Arun K.',insurer:'Bajaj Allianz',policy:'Individual',amount:'₹12,800',date:'19 Apr',compliance:'Compliant',status:'Approved'},
+  {id:'HC-2026-0437',patient:'Priya S.',insurer:'ICICI Lombard',policy:'Group',amount:'₹6,200',date:'18 Apr',compliance:'Compliant',status:'Approved'},
+  {id:'HC-2026-0436',patient:'Venkat R.',insurer:'United India',policy:'Family Floater',amount:'₹3,450',date:'17 Apr',compliance:'Pending',status:'Under review'},
+  {id:'HC-2026-0435',patient:'Meena G.',insurer:'Oriental',policy:'Individual',amount:'₹28,000',date:'16 Apr',compliance:'Compliant',status:'Approved'},
+];
+const compMap={'Compliant':'b-green','Partial':'b-amber','Non-compliant':'b-red','Pending':'b-gray'};
+const statMap={'Approved':'b-green','Under review':'b-amber','Rejected':'b-red','Pending':'b-blue'};
+function renderIns(data){
+  document.getElementById('ins-body').innerHTML=data.map(r=>`<tr>
+    <td style="font-family:monospace;font-size:11px">${r.id}</td>
+    <td>${r.patient}</td><td>${r.insurer}</td><td>${r.policy}</td>
+    <td>${r.amount}</td><td>${r.date}</td>
+    <td><span class="badge ${compMap[r.compliance]||'b-gray'}">${r.compliance}</span></td>
+    <td><span class="badge ${statMap[r.status]||'b-gray'}">${r.status}</span></td>
+  </tr>`).join('');
+}
+function filterIns(){
+  const v=document.getElementById('ins-filter').value;
+  renderIns(v?insData.filter(r=>r.compliance===v):insData);
+}
+renderIns(insData);
+
+function switchPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.snav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+}
+function selectPat(el){
+  document.querySelectorAll('.pat-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
